@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <title>NS Job Info</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/dashboard.css" rel="stylesheet">
+    <link href="css/ns.css" rel="stylesheet">
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="http://cdn.bootcss.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+    <script src="http://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+    <style type="text/css">
+        .popover {
+            max-width: 100%;
+        }
+    </style>
+</head>
+<body ng-app="jobApp" ng-controller="jobController">
+
+<nav class="navbar navbar-inverse navbar-fixed-top">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar"
+                    aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Normandy Scheduler</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="index.html">Overview</a></li>
+                <li><a href="configuration.html">Configuration</a></li>
+                <li><a href="hosts.html">Hosts</a></li>
+                <li><a href="http://wiki.baidu.com/display/INFNORMANDY/INF-NORMANDY">Wiki</a></li>
+                <!--<li><a href="#">Profile</a></li>
+                <li><a href="#">Help</a></li>-->
+            </ul>
+
+            <div class="navbar-form navbar-right">
+                <input id="search-input" type="text" class="search form-control" placeholder="Search...">
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="main">
+            <h3 class="sub-header" id="jobid">{{jobid}}</h3>
+            <div class="table-responsive col-xs-6" id="job-property">
+                <h4>Job Properties</h4>
+                <table class="table tabledara table-striped">
+                    <tbody class="list">
+                    <tr id="jobDetails" ng-repeat="jobDetail in jobDetails">
+                        <td class="jkey col-xs-4" id="jobDetails-key">{{jobDetail.key}}</td>
+                        <td class="jvalue col-xs-8" id="jobDetails-value">{{jobDetail.value}}</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-responsive col-xs-6" id="black-list">
+                <h4>Black List</h4>
+                <ul class="list list-group" >
+                    <li id="blackList" class="item list-group-item"
+                        ng-repeat="item in blackList"
+                        ng-bind="item" title="BlackList">-</li>
+                </ul>
+            </div>
+            <div class="table-responsive col-xs-6" id="black-tag-list">
+                <h4>Black Tag List</h4>
+                <ul class="list-group">
+                    <li id="blackTagList" class="item list-group-item"
+                        ng-repeat="item in blackTagList"
+                        ng-bind="item" title="BlackTagList">-</li>
+                </ul>
+            </div>
+            <div class="table-responsive col-xs-6" id="prefer-host-list">
+                <h4>Prefer Host List</h4>
+                <ul class="list list-group">
+                    <li id="preferHost" class="item list-group-item" ng-repeat="item in preferHost" title="Prefer Host">
+                        <span id="preferHost-ip" ng-bind="item.ip" title="Prefer Host IP">-</span>
+                        <span id="preferHost-capacity" class="badge" ng-bind="item.capacity"
+                              title="Prefer Host Capacity">-</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="table-responsive col-xs-6" id="must-host">
+                <h4>Must Host</h4>
+                <ul class="list list-group">
+                    <li id="mustHost" class="item list-group-item"
+                        ng-repeat="item in mustHost">
+                        <span id="mustHost-ip" ng-bind="item.ip" title="Must Host IP">-</span>
+                        <span id="mustHost-capacity" class="badge"
+                              ng-bind="item.capacity" title="Must Host Capacity">-</span>
+                    </li>
+                </ul>
+            </div>
+            <div class="table-responsive col-xs-6" id="must-tag">
+                <h4>Must Tag</h4>
+                <ul class="list list-group">
+                    <li id="mustTag" class="item list-group-item"
+                        ng-repeat="item in mustTag"
+                        ng-bind="item" title="Must Tag">-</li>
+                </ul>
+            </div>
+            <div class="col-xs-12">
+                <h3 class="sub-header header-collapse" data-toggle="collapse" data-target="#instances-list">Instance
+                    List </h3>
+                <div class="table-responsive  collapse in" id="instances-list">
+                    <table class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th class="sort num" data-sort="iip"
+                                ng-click="instancesColumn='ip'; instancesRev=!instancesRev; instancesLimit=100">IP
+                            </th>
+                            <th class="sort num" data-sort="iinstancecount"
+                                ng-click="instancesColumn='instanceInformation.length'; instancesRev=!instancesRev; instancesLimit=100">Instance
+                            </th>
+                            <th class="sort" data-sort="ihost" style="padding-left: 80px"
+                                ng-click="instancesColumn='host'; instancesRev=!instancesRev; instancesLimit=100">Agent/Task
+                            </th>
+                            <th></th>
+                        </tr>
+                        </thead>
+                        <tbody class="list">
+                        <tr id="instancesip-{{instance.ip}}-row"
+                            ng-repeat="instance in instances|orderBy: instancesColumn : instancesRev|filter:filterSearch|limitTo:instancesLimit">
+                            <td class="iip" id="instances-ip" title="IP" style="width: 100px;padding-left:0px;padding-right: 0px;" ng-bind="instance.ip">-</td>
+                            <td class="iinstancecount num" id="instances-count" style="width: 660px;padding-left:0px;padding-right: 0px;" title="rowspan" ng-bind="instance.instanceInformation.length">-</td>
+                            <td class="ihost" style="width: 460px;padding-left:0px;padding-right: 0px;" title="Agent">
+                                <a id="instances-host" style="cursor:pointer"
+                                   onclick="window.open('http://' +
+                               $(this).parent().parent().find('#instances-webpage').text()).focus()">{{instance.host}}</a>
+                            </td>
+                            <td></td>
+                            <td id="admin-{{instance.ip}}-detail-col" style="position:absolute;right:0px;z-index:1;border-top: hidden;">
+                                <a id="admin-{{instance.ip}}-detail-btn" class="glyphicon glyphicon-collapse-down btn-xs"
+                                   role="button" ng-click="getInstanceDetail(instance.ip)"></a>
+                                <a id="fold-admin-{{instance.ip}}-detail-btn" class="glyphicon glyphicon-collapse-up btn-xs"
+                                   role="button" ng-click="foldIstanceDetail(instance.ip)" style="display: none"></a>
+                            </td>
+                            <td class="iwebpage hidden" id="instances-webpage" ng-bind="instance.webpage">-</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="js/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+<script src="js/list.min.js"></script>
+<script src="js/notFoundDialog.js"></script>
+<script src="js/URI.js"></script>
+<script src="js/waitingDialog.js"></script>
+<script src="js/phplikeget.js"></script>
+<script src="js/angular.min.js"></script>
+<script src="js/angular-sanitize.min.js"></script>
+<script src="js/keymaster.js"></script>
+<script src="js/quickSearch.js"></script>
+<script type="text/javascript">
+    var app = angular.module('jobApp', ['ngSanitize']);
+    waitingDialog.show();
+    $(".sort").click(function () {
+        var ds = $(this).parent().attr('data-sort');
+        $(this).parent().find(".sort").removeClass("desc").removeClass("asc");
+        if (ds) {
+            if (ds == 'asc') {
+                $(this).addClass("desc");
+                $(this).parent().attr('data-sort', 'desc');
+            } else {
+                $(this).addClass("asc");
+                $(this).parent().attr('data-sort', 'asc');
+            }
+        } else {
+            $(this).parent().attr('data-sort', 'asc');
+            $(this).addClass("asc");
+        }
+    });
+    function jobController($scope, $http) {
+        var limitStep = 200;
+        $scope.instancesLimit = limitStep;
+        $('#search-input').keydown(function (event) {
+            var limitSearchStep = 200;
+            if (event.keyCode == 13) {
+                $scope.instancesLimit = limitSearchStep;
+                $scope.filterSearch = $(this).val();
+                $scope.$apply();
+            }
+        });
+        var uri = URI.parse(location.href);
+        $http.get('/tracker?action=job&' + uri.query).
+            success(function (response) {
+                $scope.jobid = response['jobid'];
+                $scope.blackList = response['blackList'];
+                $scope.blackTagList = response['blackTagList'];
+                $scope.preferHost = response['preferHost'];
+                $scope.mustHost = response['mustHost'];
+                $scope.mustTag = response['mustTag'];
+                $scope.jobDetails = response['jobDetails'];
+                $scope.instances = response['instances'];
+                $scope.matrixServiceDetail = response['matrixServiceDetail'];
+                $scope.instancesColumn = 'ip';
+                $scope.instancesRev = 1;
+                waitingDialog.hide();
+                var runningMetaData = false;
+                $scope.updateMetaData = function () {
+                    runningMetaData = true;
+                    var timestamp = new Date().getTime();
+                    var nextUpdate = false;
+                    if ($scope.instances.length > $scope.instancesLimit) {
+                        $scope.instancesLimit += limitStep;
+                        nextUpdate = true;
+                    }
+                    if (nextUpdate) {
+                        $scope.$apply();
+                        var time = new Date().getTime() - timestamp;
+                        setTimeout($scope.updateMetaData, time * 4);
+                    } else {
+                            // setTimeout($scope.updateMetaData, 100);
+                    }
+                };
+                $scope.updateMetaData();
+                $scope.getInstanceDetail = function (instance_ip) {
+                    var uri = URI.parse(location.href);
+                    $http.get('/tracker?action=job&' + uri.query).then(function (response) {
+                        var responseInstances = response.data.instances;
+                        angular.forEach(responseInstances, function (value0, key0) {
+                            if (value0.ip === instance_ip) {
+                                angular.forEach(value0.instanceInformation, function (value, key) {
+                                    var instance_row = 'instancesip-' + value0.ip + '-row';
+                                    var hrefmatri = 'http://' + value.matrixpage + '';
+                                    var hreftask = 'http://' + value0.webpage + '/instance.html?instance=' + value.iid + '';
+                                    $('[id="' + instance_row + '"]').after('<tr id=instances-' + value0.ip
+                                            + '-row-' + key + '> \
+                                    <td align="center" style="width: 100px; padding-left: 0px; padding-right: 0px;">\
+                                    </td>\
+                                    <td align="center" style="width: 660px; padding-left: 0px; padding-right: 0px;">\
+                                        <a style="cursor:pointer" href="' + hrefmatri + '">' + value.iid + '</a>\
+                                    </td>\
+                                    <td style="width:460px;padding-left: 120px;padding-right: 0px;"> \
+                                        <a style="cursor:pointer" href="' + hreftask + '" id="task-' + value0.ip
+                                            + '-row-' + key + '" class="glyphicon glyphicon-link" role="button"></a>\
+                                    </td>\
+                                    <td align="center"></td></tr>'
+                                    );
+                                });
+                            }
+                        });
+                        var button_id = 'admin-' + instance_ip + '-detail-btn';
+                        $('[id="' + button_id + '"]').css('display', 'none');
+                        $('[id="fold-' + button_id + '"]').css('display', '');
+                    });
+                };
+                $scope.foldIstanceDetail = function (instance_ip) {
+                    var prefix = 'instances-' + instance_ip + '';
+                    $('[id^="' + prefix + '"]').each(function (index, element) {
+                        $(element).remove();
+                    });
+                    var button_id = 'admin-' + instance_ip + '-detail-btn';
+                    $('[id = "' + button_id + '"]').css('display', '');
+                    $('[id = "fold-' + button_id + '"]').css('display', 'none');
+                };
+            }).error(function () {
+                waitingDialog.hide();
+                notFoundDialog.show('404, ' + URI.parseQuery(location.search).job + ' not Found ... ');
+            });
+    }
+    function hostController($scope, $http) {
+        var limitStep = 200;
+        $scope.instancesLimit = limitStep;
+        $('#search-input').keydown(function (event) {
+            var limitSearchStep = 200;
+            if (event.keyCode === 13) {
+                $scope.instancesLimit = limitSearchStep;
+                $scope.filterSearch = $(this).val();
+                $scope.$apply();
+            }
+        });
+
+        var uri = URI.parse(location.href);
+        $http.get('/tracker?action=job&' + uri.query).
+            success(function (response) {
+                $scope.jobid = response['jobid'];
+                $scope.blackList = response['blackList'];
+                $scope.blackTagList = response['blackTagList'];
+                $scope.preferHost = response['preferHost'];
+                $scope.mustHost = response['mustHost'];
+                $scope.mustTag = response['mustTag'];
+                $scope.jobDetails = response['jobDetails'];
+                $scope.instances = response['instances'];
+                $scope.matrixServiceDetail = response['matrixServiceDetail'];
+                waitingDialog.hide();
+                var runningMetaData = false;
+                $scope.updateMetaData = function () {
+                    runningMetaData = true;
+                    var timestamp = new Date().getTime();
+                    var nextUpdate = false;
+                    if ($scope.instances.length > $scope.instancesLimit) {
+                        $scope.instancesLimit += limitStep;
+                        nextUpdate = true;
+                    }
+                    if (nextUpdate) {
+                        $scope.$apply();
+                        var time = new Date().getTime() - timestamp;
+                        setTimeout($scope.updateMetaData, time * 4);
+                    } else {
+                            // setTimeout($scope.updateMetaData, 100);
+                    }
+                };
+                $scope.updateMetaData();
+            }).error(function () {
+                waitingDialog.hide();
+                notFoundDialog.show('404, ' + URI.parseQuery(location.search).job + ' not Found ... ');
+            });
+    }
+</script>
+</body>
+</html>
