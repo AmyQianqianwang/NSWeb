@@ -133,4 +133,4 @@ var waitingDialog = (function ($) {
 		}
 	}
 
-})(jQuery);
+})(jQuery);  
